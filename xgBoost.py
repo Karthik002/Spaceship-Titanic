@@ -1,21 +1,28 @@
 # Import libraries
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import time
 
 # Sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import ConfusionMatrixDisplay
 from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import roc_curve, auc
 
 # Model
 from xgboost import XGBClassifier
+
+start_time = time.time()
 
 # import data
 df_train = pd.read_csv('train.csv')
 df_test = pd.read_csv('test.csv')
 df_train.head()
 
-# Drop null values
+# Fill null values
 df_train['Age'] =df_train['Age'].fillna(df_train['Age'].median())
 df_test['Age'] =df_test['Age'].fillna(df_test['Age'].median())
 df_train['VIP'] =df_train['VIP'].fillna(False)
@@ -68,12 +75,33 @@ X = df_train.drop('Transported',axis=1)
 y = df_train['Transported']
 
 # Run the model
-X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.25, random_state=0)
+X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.3, random_state=0)
 xgb=XGBClassifier(random_state=1,n_estimators=250,learning_rate=0.15,max_depth=3)
 xgb.fit(X_train,y_train)
 pred_y=xgb.predict(X_val)
 pred=xgb.predict(X_train)
-    
-print(accuracy_score(y_train.values,pred))
-print(accuracy_score(y_val.values,pred_y))
 
+end_time = time.time()
+print(accuracy_score(y_val.values,pred_y))
+print(print('Execution time:', end_time-start_time, 'seconds'))
+
+# Confusion Matrix
+confusion_matrix = confusion_matrix(y_val, pred_y)
+cm_display = ConfusionMatrixDisplay(confusion_matrix = confusion_matrix, display_labels = [False, True])
+cm_display.plot()
+plt.show()
+
+# ROC Curve Plot
+fpr, tpr, _ = roc_curve(y_train.values.ravel(), pred)
+roc_auc = auc(fpr, tpr)
+
+plt.figure()
+plt.plot(fpr, tpr, color='red', label='ROC curve (area = %0.3f)' % roc_auc)
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve')
+plt.legend(loc="lower right")
+plt.show()

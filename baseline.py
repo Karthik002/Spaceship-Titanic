@@ -3,6 +3,9 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss
 from sklearn.model_selection import train_test_split
+import time
+
+start_time = time.time()
 
 # read data
 train_data = pd.read_csv('train.csv')
@@ -19,5 +22,9 @@ x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_
 lr = LogisticRegression()
 lr.fit(x_train, y_train)
 y_pred = lr.predict_proba(x_test)
+
+end_time = time.time()
+
 print("Logistic Regression Model Accuracy: ")
 print(log_loss(y_test, y_pred))
+print(print('Execution time:', end_time-start_time, 'seconds'))
